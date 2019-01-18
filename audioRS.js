@@ -18,6 +18,14 @@ let dimensions = { width: 1.5, height: 2.4, depth: 1.3  };
 let materials = {left: 'brick-bare', right: 'brick-bare',
                    up: 'brick-bare', down: 'wood-panel',
                 front: 'brick-bare', back: 'brick-bare' };
+                /* 素材の種類
+                brick-bare　： レンガ
+                curtain-heavy　： 重いカーテン
+                marble　： 大理石
+                glass-thin ： 薄いガラス
+                grass　： 原っぱ
+                transparent　： 透明、何もなし
+                */
 
 
 
@@ -157,7 +165,7 @@ function stopStream(stream) {
          
          //Rsourceの作成
          var Rsource = scene.createSource();
-         Rsource.setPosition(0,0,0); //(x,y,z)
+         //Rsource.setPosition(0,0,0); //(x,y,z)
          source1.connect(Rsource.input);
 
 
