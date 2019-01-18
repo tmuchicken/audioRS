@@ -11,6 +11,8 @@ let peer = null;
 let existingCall = null;
 var videoContainer = document.getElementById('container');
 var localVideo = document.getElementById('local_video');
+var sound = null;
+
 //シーンの素材設定
 let dimensions = { width: 1.5, height: 2.4, depth: 1.3  };
 let materials = {left: 'brick-bare', right: 'brick-bare',
@@ -155,7 +157,7 @@ function stopStream(stream) {
          
          //Rsourceの作成
          var Rsource = scene.createSource();
-         Rsource.setPosition(10,0,0); //(x,y,z)
+         Rsource.setPosition(0,0,0); //(x,y,z)
          source1.connect(Rsource.input);
 
 
@@ -170,7 +172,7 @@ function stopStream(stream) {
    });
  };
 
- function startSelectedVideoAudio() {
+ function startSelectedVideoAudio(sound) {
     var audioId = getSelectedAudio();
     console.log('selected audio=' + audioId);
     var constraints = {
@@ -194,24 +196,30 @@ function stopStream(stream) {
    constraints
   ).then(function(stream) {
     console.log('1streamきてる');
-    logStream('selectedVideo', stream);
-    //localVideo.srcObject = stream;
-        //AudioContextを作成
-        var context1  = new AudioContext();
-        //sourceの作成
-        var source1 = context1.createMediaStreamSource(stream);
-        //panner の作成
-        var panner1 = context1.createPanner();
-        source1.connect(panner1);
-        //peer1の作成
-        var peer1 = context1.createMediaStreamDestination();
-        //StereoPannner作成
-        var StereoPanner = context1.createStereoPanner();
-        panner1.connect(StereoPanner);
-        StereoPanner.pan.value = sound;
+    logStream('selectedVideo', stream);     
 
-        StereoPanner.connect(peer1); //ココの先頭変えるよ
-        localStream1 = peer1.stream;
+        //AudioContextを作成
+         var context1  = new AudioContext();
+         //sourceの作成
+         var source1 = context1.createMediaStreamSource(stream);
+         
+         //シーンの作成
+         scene = new ResonanceAudio(context1, {
+            ambisonicOrder: 1,
+          });
+         scene.setRoomProperties(dimensions,
+            materials);
+         scene.setListenerPosition(0,0,0); //(x,y,z)
+         
+         //Rsourceの作成
+         var Rsource = scene.createSource();
+         Rsource.setPosition(sound,0,0); //(x,y,z)
+         source1.connect(Rsource.input);
+
+         //peer1の作成
+         var peer1 = context1.createMediaStreamDestination();
+         scene.output.connect(peer1); //ココの先頭変えるよ
+         localStream1 = peer1.stream;
 
     logStream('selectedVideo', stream);
   }).catch(function(err){
@@ -244,20 +252,34 @@ function quick(){
     startSelectedAudioStereo();
     getpeerid("ALR1");
     $('#callto-id').val("ln1");
-    $('#make-call').submit(function(e){
-        e.preventDefault();
-        const call = peer.call($('#callto-id').val(), localStream1); 
-        setupCallEventHandlers(call);
+    Promise.resolve()
+  .then(wait(2)) // ここで10秒待つ（「Promiseオブジェクトを返す関数」を thenに渡しています）
+  .then(function() {
+    // ここに目的の処理を書きます。
+    const call = peer.call($('#callto-id').val(), localStream1); 
+    setupCallEventHandlers(call);
+    })
+  .catch(function (err) {
+    console.error(err);
+    self.result_message = error;
+  });
+};
+   
+var wait = function(sec) {
+    return function() {
+        return new Promise(function(resolve/*, reject*/) {
+        setTimeout(resolve, sec*1000)
         });
-    };
+    }
+  };
     
 //オーディオシステムの選択
 $('#start_video_button_L').click(function () {
-    startSelectedVideoAudio();
+    startSelectedVideoAudio(-10);
 });
 
 $('#start_video_button_R').click(function () {
-    startSelectedVideoAudio();
+    startSelectedVideoAudio(10);
 });
 
 $('#start_video_button_W').click(function () {
